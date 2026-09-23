@@ -1,6 +1,6 @@
 # FastAPI Machine Learning API: Insurance Premium Predictor
 
-![Python](https://img.shields.io/badge/Python-3.11-007acc?logo=python&logoColor=white) ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Pipeline-e67e22?logo=scikit-learn&logoColor=white) ![Machine Learning](https://img.shields.io/badge/Machine%20Learning-Advanced-27ae60) ![Pydantic](https://img.shields.io/badge/Pydantic-Validation-000000?logo=pydantic&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-API-1abc9c?logo=fastapi&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11-007acc?logo=python&logoColor=white) ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Pipeline-e67e22?logo=scikit-learn&logoColor=white) ![Machine Learning](https://img.shields.io/badge/Machine%20Learning-27ae6) ![Pydantic](https://img.shields.io/badge/Pydantic-Validation-000000?logo=pydantic&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-API-1abc9c?logo=fastapi&logoColor=white)
 
 
 This project serves as a practical implementation to track my learning journey of integrating Machine Learning models into production-ready web APIs. It exposes a Scikit-Learn Random Forest model via **FastAPI**, featuring robust input validation and automated feature engineering using **Pydantic**.
