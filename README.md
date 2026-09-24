@@ -1,6 +1,3 @@
-Here is the updated `README.md` that integrates your new Streamlit frontend, Docker containerization, and AWS EC2 deployment while preserving the original structure and content.
-
-```markdown
 # FastAPI Machine Learning API: Insurance Premium Predictor
 
 ![Python](https://img.shields.io/badge/Python-3.11-007acc?logo=python&logoColor=white) ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Pipeline-e67e22?logo=scikit-learn&logoColor=white) ![Machine Learning](https://img.shields.io/badge/Machine%20Learning-27ae6) ![Pydantic](https://img.shields.io/badge/Pydantic-Validation-000000?logo=pydantic&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-API-1abc9c?logo=fastapi&logoColor=white) ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white) ![AWS EC2](https://img.shields.io/badge/AWS_EC2-232F3E?logo=amazon-aws&logoColor=white) 
