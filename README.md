@@ -45,6 +45,7 @@ The API predicts a user's **Insurance Premium Category** (`Low`, `Medium`, or `H
 │   ├── prediction_reponse.py        # Pydantic schema for the API response
 │   └── user_input_validation.py     # Pydantic schema for input validation and feature creation
 ├── pyproject.toml                   # Project dependencies and metadata
+├── requirements.txt                 # Modules and libraries used in Project 
 └── README.md                        # Project documentation
 
 ```
