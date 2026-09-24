@@ -1,0 +1,3518 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+config/
+  city_tier.py
+model/
+  ml_train/
+    insurance.csv
+    train_ml.ipynb
+    Untitled.ipynb
+  model.pkl
+  predict.py
+schema/
+  prediction_reponse.py
+  user_input_validation.py
+src/
+  ml_through_fastapi/
+    __init__.py
+.gitignore
+.python-version
+app.py
+Dockerfile
+frontend.py
+pyproject.toml
+README.md
+requirements.txt
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="model/ml_train/Untitled.ipynb">
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "01f8191b-f518-42bf-ac14-29aa940eac96",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.13.9"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
+</file>
+
+<file path="Dockerfile">
+#Base image
+FROM python:3.11-slim
+
+# Set Directory
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+#Copy rest application
+COPY . .
+
+# Expose Application Port
+
+EXPOSE 8000
+
+# Command to start the FastAPI Application
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+</file>
+
+<file path="frontend.py">
+import streamlit as st
+import requests
+
+API_URL="http://16.178.42.100:8000/predict"
+
+st.title("Insurance Premium Predictor")
+st.markdown("Enter your details below")
+
+#Input Fields
+age=st.number_input("Age",min_value=1,max_value=120,value=30)
+weight=st.number_input("Weight (in Kgs)",min_value=1.0,value=65.0)
+height=st.number_input("Height (in meters)",min_value=0.5,max_value=2.2,value=1.8)
+income_lpa=st.number_input("Annual Income in LPA",value=6.0,min_value=1.0)
+smoker=st.selectbox("Are you a smoker?",options=[True,False])
+city=st.text_input("City of resident",value="Mumbai")
+occupation=st.selectbox("Occupation",options=['retired', 'freelancer', 'student', 'government_job', 'business_owner', 'unemployed', 'private_job'])
+
+if st.button("Predict the premium category"):
+    input_data={
+        "age":age,
+        "weight":weight,
+        "height":height,
+        "income_lpa":income_lpa,
+        "smoker":smoker,
+        "city":city,
+        "occupation":occupation
+    }
+    try:
+        response=requests.post(API_URL,json=input_data)
+        result=response.json()
+        if response.status_code==200 and "response" in result:
+            prediction=result["response"]
+            st.success(f"Predicted Insurance Premium Category is **{prediction['predicted_category']}**")
+            st.write("Confidence",prediction["confidence"])
+            st.write("Class Probabilities:")
+            st.json(prediction["class_probabalities"])
+        else:
+            st.error(f"API Error: {response.status_code}")
+            st.write(result)
+    except requests.exceptions.ConnectionError:
+        st.error("Could not connet to the FastAPI server. Make sure it's Running")
+</file>
+
+<file path="requirements.txt">
+fastapi
+uvicorn
+python-multipart
+scikit-learn==1.9.1
+pandas
+numpy
+biopython
+pydantic
+</file>
+
+<file path="config/city_tier.py">
+tier_1_cities = ["Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata", "Hyderabad", "Pune"]
+tier_2_cities = [
+    "Jaipur", "Chandigarh", "Indore", "Lucknow", "Patna", "Ranchi", "Visakhapatnam", "Coimbatore",
+    "Bhopal", "Nagpur", "Vadodara", "Surat", "Rajkot", "Jodhpur", "Raipur", "Amritsar", "Varanasi",
+    "Agra", "Dehradun", "Mysore", "Jabalpur", "Guwahati", "Thiruvananthapuram", "Ludhiana", "Nashik",
+    "Allahabad", "Udaipur", "Aurangabad", "Hubli", "Belgaum", "Salem", "Vijayawada", "Tiruchirappalli",
+    "Bhavnagar", "Gwalior", "Dhanbad", "Bareilly", "Aligarh", "Gaya", "Kozhikode", "Warangal",
+    "Kolhapur", "Bilaspur", "Jalandhar", "Noida", "Guntur", "Asansol", "Siliguri"
+]
+</file>
+
+<file path="model/ml_train/insurance.csv">
+age,weight,height,income_lpa,smoker,city,occupation,insurance_premium_category
+67,119.8,1.56,2.92,False,Jaipur,retired,High
+36,101.1,1.83,34.28,False,Chennai,freelancer,Low
+39,56.8,1.64,36.64,False,Indore,freelancer,Low
+22,109.4,1.55,3.34,True,Mumbai,student,Medium
+69,62.2,1.6,3.94,True,Indore,retired,High
+53,62.9,1.66,50.0,False,Kota,freelancer,Medium
+19,80.1,1.68,3.59,True,Hyderabad,student,Medium
+31,105.7,1.78,10.865820771380372,True,Delhi,government_job,Medium
+73,58.0,1.58,1.78,False,Chandigarh,retired,Medium
+58,74.4,1.73,43.07,False,Pune,business_owner,Low
+29,71.9,1.77,32.78,True,Chennai,business_owner,Medium
+25,77.2,1.56,10.899386596696989,True,Pune,government_job,Low
+42,95.2,1.78,17.58,True,Chandigarh,freelancer,High
+28,93.4,1.84,11.95,False,Kolkata,freelancer,Low
+49,89.3,1.65,13.50516648107039,False,Kota,government_job,Medium
+61,61.7,1.68,2.99,True,Delhi,retired,Medium
+66,70.2,1.59,0.61,False,Pune,retired,Medium
+65,90.1,1.7,2.23,False,Delhi,retired,Medium
+52,80.9,1.8,38.14,True,Kota,business_owner,High
+24,111.2,1.6,2.79,True,Lucknow,student,High
+34,58.2,1.85,30.65,True,Gaya,business_owner,Medium
+69,92.7,1.84,2.91,False,Jalandhar,retired,High
+57,106.4,1.83,30.0,False,Chandigarh,government_job,Low
+35,70.3,1.78,23.71,False,Mysore,unemployed,Medium
+50,54.2,1.66,18.6,False,Mysore,private_job,Medium
+59,60.2,1.55,30.0,False,Mysore,government_job,Low
+33,79.0,1.61,23.61,False,Jaipur,freelancer,Medium
+58,111.4,1.78,34.33,False,Lucknow,private_job,Medium
+38,101.2,1.79,11.63,False,Mumbai,unemployed,Low
+60,117.8,1.66,50.0,True,Lucknow,business_owner,High
+35,89.6,1.73,32.97,False,Delhi,business_owner,Low
+39,51.1,1.83,11.77,True,Lucknow,private_job,Medium
+47,113.7,1.9,50.0,False,Jalandhar,private_job,Medium
+73,67.5,1.76,1.46,False,Mumbai,retired,Medium
+75,100.8,1.75,0.68,True,Kota,retired,High
+59,59.3,1.69,43.28,True,Chandigarh,private_job,Medium
+61,58.4,1.64,0.53,False,Hyderabad,retired,Medium
+26,57.2,1.79,8.09,False,Indore,freelancer,Medium
+74,111.2,1.83,1.84,True,Jaipur,retired,High
+51,100.6,1.68,11.99,True,Bangalore,unemployed,High
+44,57.0,1.53,40.19,True,Pune,unemployed,Medium
+64,59.8,1.63,3.87,False,Mumbai,retired,Medium
+23,69.9,1.79,2.6,True,Mysore,student,Medium
+72,85.7,1.71,1.56,False,Chennai,retired,Medium
+59,77.0,1.6,50.0,True,Lucknow,private_job,Medium
+58,75.3,1.5,18.39,False,Jalandhar,unemployed,High
+42,83.0,1.57,25.57,True,Kolkata,unemployed,High
+55,116.4,1.87,8.34,False,Chandigarh,private_job,Medium
+36,94.8,1.66,32.69,True,Chennai,unemployed,Medium
+23,106.6,1.58,2.29,False,Kota,student,Medium
+55,66.7,1.88,25.23,True,Jaipur,private_job,Medium
+45,101.9,1.62,28.95,True,Jaipur,private_job,High
+18,116.7,1.57,2.96,False,Jalandhar,student,Medium
+41,101.3,1.85,30.0,True,Delhi,government_job,Medium
+75,54.5,1.61,3.32,True,Lucknow,retired,High
+47,75.7,1.73,24.93,False,Delhi,unemployed,Low
+24,101.9,1.55,2.86,True,Kolkata,student,Medium
+72,76.8,1.69,1.36,True,Jalandhar,retired,High
+72,95.9,1.79,3.31,True,Indore,retired,High
+61,118.7,1.82,1.13,False,Jaipur,retired,High
+41,101.3,1.81,49.94,True,Jalandhar,unemployed,High
+32,102.4,1.68,24.05,True,Chandigarh,unemployed,High
+34,72.8,1.83,35.67,False,Chennai,business_owner,Low
+47,71.3,1.82,41.66,True,Gaya,business_owner,High
+71,117.8,1.78,1.02,False,Chandigarh,retired,High
+46,106.3,1.68,38.07,True,Jaipur,unemployed,High
+18,63.9,1.59,3.23,False,Indore,student,Low
+22,56.4,1.82,2.76,False,Jaipur,student,Low
+20,80.3,1.87,0.68,False,Lucknow,student,Low
+46,67.2,1.75,6.034486970484345,False,Lucknow,government_job,Low
+69,99.9,1.65,0.57,False,Chandigarh,retired,High
+38,54.1,1.81,20.25,False,Chandigarh,unemployed,Low
+70,116.3,1.81,3.08,False,Indore,retired,High
+69,84.3,1.62,2.22,True,Kolkata,retired,High
+63,71.1,1.54,1.88,True,Jalandhar,retired,High
+53,62.3,1.74,45.07,False,Hyderabad,unemployed,Low
+62,99.1,1.5,1.12,False,Mysore,retired,High
+67,114.5,1.74,0.61,True,Mumbai,retired,High
+52,95.6,1.85,14.74,True,Jalandhar,freelancer,High
+39,55.3,1.56,30.0,True,Indore,government_job,Low
+56,95.8,1.67,50.0,False,Jalandhar,unemployed,High
+41,82.6,1.61,22.19,True,Mysore,freelancer,High
+35,56.0,1.77,12.96,False,Delhi,unemployed,Low
+61,83.3,1.85,2.16,True,Kota,retired,High
+75,86.2,1.73,0.62,True,Jaipur,retired,High
+33,51.4,1.86,34.66,False,Chennai,private_job,Low
+35,66.0,1.89,37.38,False,Hyderabad,freelancer,Low
+30,82.0,1.6,25.598370295434762,False,Hyderabad,government_job,Low
+54,97.4,1.76,30.0,False,Mumbai,government_job,Low
+24,108.8,1.89,4.0,False,Chennai,student,Low
+59,54.0,1.6,21.07,False,Mumbai,business_owner,Low
+38,119.8,1.76,28.46788535766728,False,Bangalore,government_job,Low
+37,62.7,1.85,30.0,True,Lucknow,government_job,Low
+23,79.4,1.85,1.28,False,Indore,student,Low
+50,105.4,1.78,10.542289178793244,False,Bangalore,government_job,Low
+36,52.8,1.57,19.64,False,Indore,business_owner,Low
+26,113.8,1.54,34.01,False,Delhi,private_job,Low
+52,60.8,1.8,44.86,False,Hyderabad,freelancer,Low
+27,101.1,1.82,28.3,False,Kolkata,business_owner,Low
+40,70.0,1.59,28.16664036808183,True,Bangalore,government_job,Low
+</file>
+
+<file path="model/ml_train/train_ml.ipynb">
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 55,
+   "id": "7771794b-d448-4f63-848c-1e2bcc8239c0",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "from sklearn.ensemble import RandomForestClassifier\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn.preprocessing import OneHotEncoder\n",
+    "from sklearn.pipeline import Pipeline\n",
+    "from sklearn.compose import ColumnTransformer\n",
+    "from sklearn.metrics import classification_report,accuracy_score\n",
+    "import numpy as np"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "f1b5b003-e8e2-4232-8e9d-b81d0fd2cb96",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df=pd.read_csv(\"insurance.csv\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "17150953-3981-491f-9a9a-ef64e80502fe",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>age</th>\n",
+       "      <th>weight</th>\n",
+       "      <th>height</th>\n",
+       "      <th>income_lpa</th>\n",
+       "      <th>smoker</th>\n",
+       "      <th>city</th>\n",
+       "      <th>occupation</th>\n",
+       "      <th>insurance_premium_category</th>\n",
+       "      <th>bmi</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>67</td>\n",
+       "      <td>119.8</td>\n",
+       "      <td>1.56</td>\n",
+       "      <td>2.92000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Jaipur</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>High</td>\n",
+       "      <td>49.227482</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>36</td>\n",
+       "      <td>101.1</td>\n",
+       "      <td>1.83</td>\n",
+       "      <td>34.28000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Chennai</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>30.189017</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>39</td>\n",
+       "      <td>56.8</td>\n",
+       "      <td>1.64</td>\n",
+       "      <td>36.64000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>21.118382</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>22</td>\n",
+       "      <td>109.4</td>\n",
+       "      <td>1.55</td>\n",
+       "      <td>3.34000</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Mumbai</td>\n",
+       "      <td>student</td>\n",
+       "      <td>Medium</td>\n",
+       "      <td>45.535900</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>69</td>\n",
+       "      <td>62.2</td>\n",
+       "      <td>1.60</td>\n",
+       "      <td>3.94000</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>High</td>\n",
+       "      <td>24.296875</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>95</th>\n",
+       "      <td>36</td>\n",
+       "      <td>52.8</td>\n",
+       "      <td>1.57</td>\n",
+       "      <td>19.64000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>21.420747</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>96</th>\n",
+       "      <td>26</td>\n",
+       "      <td>113.8</td>\n",
+       "      <td>1.54</td>\n",
+       "      <td>34.01000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Delhi</td>\n",
+       "      <td>private_job</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>47.984483</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>97</th>\n",
+       "      <td>52</td>\n",
+       "      <td>60.8</td>\n",
+       "      <td>1.80</td>\n",
+       "      <td>44.86000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Hyderabad</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>18.765432</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>98</th>\n",
+       "      <td>27</td>\n",
+       "      <td>101.1</td>\n",
+       "      <td>1.82</td>\n",
+       "      <td>28.30000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Kolkata</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>30.521676</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>99</th>\n",
+       "      <td>40</td>\n",
+       "      <td>70.0</td>\n",
+       "      <td>1.59</td>\n",
+       "      <td>28.16664</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Bangalore</td>\n",
+       "      <td>government_job</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>27.688778</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>100 rows × 9 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    age  weight  height  income_lpa  smoker       city      occupation  \\\n",
+       "0    67   119.8    1.56     2.92000   False     Jaipur         retired   \n",
+       "1    36   101.1    1.83    34.28000   False    Chennai      freelancer   \n",
+       "2    39    56.8    1.64    36.64000   False     Indore      freelancer   \n",
+       "3    22   109.4    1.55     3.34000    True     Mumbai         student   \n",
+       "4    69    62.2    1.60     3.94000    True     Indore         retired   \n",
+       "..  ...     ...     ...         ...     ...        ...             ...   \n",
+       "95   36    52.8    1.57    19.64000   False     Indore  business_owner   \n",
+       "96   26   113.8    1.54    34.01000   False      Delhi     private_job   \n",
+       "97   52    60.8    1.80    44.86000   False  Hyderabad      freelancer   \n",
+       "98   27   101.1    1.82    28.30000   False    Kolkata  business_owner   \n",
+       "99   40    70.0    1.59    28.16664    True  Bangalore  government_job   \n",
+       "\n",
+       "   insurance_premium_category        bmi  \n",
+       "0                        High  49.227482  \n",
+       "1                         Low  30.189017  \n",
+       "2                         Low  21.118382  \n",
+       "3                      Medium  45.535900  \n",
+       "4                        High  24.296875  \n",
+       "..                        ...        ...  \n",
+       "95                        Low  21.420747  \n",
+       "96                        Low  47.984483  \n",
+       "97                        Low  18.765432  \n",
+       "98                        Low  30.521676  \n",
+       "99                        Low  27.688778  \n",
+       "\n",
+       "[100 rows x 9 columns]"
+      ]
+     },
+     "execution_count": 20,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "e4510c11-9cae-4eb6-ba70-f71cd1994eef",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>age</th>\n",
+       "      <th>weight</th>\n",
+       "      <th>height</th>\n",
+       "      <th>income_lpa</th>\n",
+       "      <th>smoker</th>\n",
+       "      <th>city</th>\n",
+       "      <th>occupation</th>\n",
+       "      <th>insurance_premium_category</th>\n",
+       "      <th>bmi</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>13</th>\n",
+       "      <td>28</td>\n",
+       "      <td>93.4</td>\n",
+       "      <td>1.84</td>\n",
+       "      <td>11.95</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Kolkata</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>27.587429</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>86</th>\n",
+       "      <td>35</td>\n",
+       "      <td>66.0</td>\n",
+       "      <td>1.89</td>\n",
+       "      <td>37.38</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Hyderabad</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>18.476526</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39</th>\n",
+       "      <td>51</td>\n",
+       "      <td>100.6</td>\n",
+       "      <td>1.68</td>\n",
+       "      <td>11.99</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Bangalore</td>\n",
+       "      <td>unemployed</td>\n",
+       "      <td>High</td>\n",
+       "      <td>35.643424</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>35</th>\n",
+       "      <td>59</td>\n",
+       "      <td>59.3</td>\n",
+       "      <td>1.69</td>\n",
+       "      <td>43.28</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Chandigarh</td>\n",
+       "      <td>private_job</td>\n",
+       "      <td>Medium</td>\n",
+       "      <td>20.762578</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>32</th>\n",
+       "      <td>47</td>\n",
+       "      <td>113.7</td>\n",
+       "      <td>1.90</td>\n",
+       "      <td>50.00</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Jalandhar</td>\n",
+       "      <td>private_job</td>\n",
+       "      <td>Medium</td>\n",
+       "      <td>31.495845</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    age  weight  height  income_lpa  smoker        city   occupation  \\\n",
+       "13   28    93.4    1.84       11.95   False     Kolkata   freelancer   \n",
+       "86   35    66.0    1.89       37.38   False   Hyderabad   freelancer   \n",
+       "39   51   100.6    1.68       11.99    True   Bangalore   unemployed   \n",
+       "35   59    59.3    1.69       43.28    True  Chandigarh  private_job   \n",
+       "32   47   113.7    1.90       50.00   False   Jalandhar  private_job   \n",
+       "\n",
+       "   insurance_premium_category        bmi  \n",
+       "13                        Low  27.587429  \n",
+       "86                        Low  18.476526  \n",
+       "39                       High  35.643424  \n",
+       "35                     Medium  20.762578  \n",
+       "32                     Medium  31.495845  "
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.sample(5)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "8dffdba0-b387-4501-838d-1fd03d02842b",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array(['retired', 'freelancer', 'student', 'government_job',\n",
+       "       'business_owner', 'unemployed', 'private_job'], dtype=object)"
+      ]
+     },
+     "execution_count": 23,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df[\"occupation\"].unique()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "499d949f-dcb4-467c-b2a3-87906abac35a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dff=df.copy()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "id": "1aef7d94-0e7f-44d6-a7d6-9e871c49eb00",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dff[\"bmi\"]=dff[\"weight\"]/(dff[\"height\"])**2"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "id": "df3f1d26-dd62-4e58-bff2-c570a301fe1c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def age_grp(age):\n",
+    "    if age<25:\n",
+    "        return \"young\"\n",
+    "    elif age<45:\n",
+    "        return \"adult\"\n",
+    "    elif age<60:\n",
+    "        return \"middle_age\"\n",
+    "    else:\n",
+    "        return \"senior\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "id": "4b7c07c0-0779-43aa-b2fd-d253ddf8c90d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dff[\"age_group\"]=dff[\"age\"].apply(age_grp)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "id": "d54c0d5d-caab-4d3a-b445-a06307bb039d",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>age</th>\n",
+       "      <th>weight</th>\n",
+       "      <th>height</th>\n",
+       "      <th>income_lpa</th>\n",
+       "      <th>smoker</th>\n",
+       "      <th>city</th>\n",
+       "      <th>occupation</th>\n",
+       "      <th>insurance_premium_category</th>\n",
+       "      <th>bmi</th>\n",
+       "      <th>age_group</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>67</td>\n",
+       "      <td>119.8</td>\n",
+       "      <td>1.56</td>\n",
+       "      <td>2.92000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Jaipur</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>High</td>\n",
+       "      <td>49.227482</td>\n",
+       "      <td>senior</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>36</td>\n",
+       "      <td>101.1</td>\n",
+       "      <td>1.83</td>\n",
+       "      <td>34.28000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Chennai</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>30.189017</td>\n",
+       "      <td>adult</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>39</td>\n",
+       "      <td>56.8</td>\n",
+       "      <td>1.64</td>\n",
+       "      <td>36.64000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>21.118382</td>\n",
+       "      <td>adult</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>22</td>\n",
+       "      <td>109.4</td>\n",
+       "      <td>1.55</td>\n",
+       "      <td>3.34000</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Mumbai</td>\n",
+       "      <td>student</td>\n",
+       "      <td>Medium</td>\n",
+       "      <td>45.535900</td>\n",
+       "      <td>young</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>69</td>\n",
+       "      <td>62.2</td>\n",
+       "      <td>1.60</td>\n",
+       "      <td>3.94000</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>High</td>\n",
+       "      <td>24.296875</td>\n",
+       "      <td>senior</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>95</th>\n",
+       "      <td>36</td>\n",
+       "      <td>52.8</td>\n",
+       "      <td>1.57</td>\n",
+       "      <td>19.64000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>21.420747</td>\n",
+       "      <td>adult</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>96</th>\n",
+       "      <td>26</td>\n",
+       "      <td>113.8</td>\n",
+       "      <td>1.54</td>\n",
+       "      <td>34.01000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Delhi</td>\n",
+       "      <td>private_job</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>47.984483</td>\n",
+       "      <td>adult</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>97</th>\n",
+       "      <td>52</td>\n",
+       "      <td>60.8</td>\n",
+       "      <td>1.80</td>\n",
+       "      <td>44.86000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Hyderabad</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>18.765432</td>\n",
+       "      <td>middle_age</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>98</th>\n",
+       "      <td>27</td>\n",
+       "      <td>101.1</td>\n",
+       "      <td>1.82</td>\n",
+       "      <td>28.30000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Kolkata</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>30.521676</td>\n",
+       "      <td>adult</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>99</th>\n",
+       "      <td>40</td>\n",
+       "      <td>70.0</td>\n",
+       "      <td>1.59</td>\n",
+       "      <td>28.16664</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Bangalore</td>\n",
+       "      <td>government_job</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>27.688778</td>\n",
+       "      <td>adult</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>100 rows × 10 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    age  weight  height  income_lpa  smoker       city      occupation  \\\n",
+       "0    67   119.8    1.56     2.92000   False     Jaipur         retired   \n",
+       "1    36   101.1    1.83    34.28000   False    Chennai      freelancer   \n",
+       "2    39    56.8    1.64    36.64000   False     Indore      freelancer   \n",
+       "3    22   109.4    1.55     3.34000    True     Mumbai         student   \n",
+       "4    69    62.2    1.60     3.94000    True     Indore         retired   \n",
+       "..  ...     ...     ...         ...     ...        ...             ...   \n",
+       "95   36    52.8    1.57    19.64000   False     Indore  business_owner   \n",
+       "96   26   113.8    1.54    34.01000   False      Delhi     private_job   \n",
+       "97   52    60.8    1.80    44.86000   False  Hyderabad      freelancer   \n",
+       "98   27   101.1    1.82    28.30000   False    Kolkata  business_owner   \n",
+       "99   40    70.0    1.59    28.16664    True  Bangalore  government_job   \n",
+       "\n",
+       "   insurance_premium_category        bmi   age_group  \n",
+       "0                        High  49.227482      senior  \n",
+       "1                         Low  30.189017       adult  \n",
+       "2                         Low  21.118382       adult  \n",
+       "3                      Medium  45.535900       young  \n",
+       "4                        High  24.296875      senior  \n",
+       "..                        ...        ...         ...  \n",
+       "95                        Low  21.420747       adult  \n",
+       "96                        Low  47.984483       adult  \n",
+       "97                        Low  18.765432  middle_age  \n",
+       "98                        Low  30.521676       adult  \n",
+       "99                        Low  27.688778       adult  \n",
+       "\n",
+       "[100 rows x 10 columns]"
+      ]
+     },
+     "execution_count": 34,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dff"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "id": "4d8f7ed4-b3a2-4bb9-937a-c91597142645",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def life_risk(row):\n",
+    "    if row[\"smoker\"] and row[\"bmi\"]>30:\n",
+    "        return \"high\"\n",
+    "    elif row[\"smoker\"] or row[\"bmi\"]>27:\n",
+    "        return \"medium\"\n",
+    "    else:\n",
+    "        return \"low\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "id": "deafe6a4-0d71-4d60-8bb3-bbf1b1044644",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dff[\"lifestyle_risk\"]=dff.apply(life_risk,axis=1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "id": "1469f392-2c84-4ff8-80c8-375690f3e1b1",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>age</th>\n",
+       "      <th>weight</th>\n",
+       "      <th>height</th>\n",
+       "      <th>income_lpa</th>\n",
+       "      <th>smoker</th>\n",
+       "      <th>city</th>\n",
+       "      <th>occupation</th>\n",
+       "      <th>insurance_premium_category</th>\n",
+       "      <th>bmi</th>\n",
+       "      <th>age_group</th>\n",
+       "      <th>lifestyle_risk</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>67</td>\n",
+       "      <td>119.8</td>\n",
+       "      <td>1.56</td>\n",
+       "      <td>2.92000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Jaipur</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>High</td>\n",
+       "      <td>49.227482</td>\n",
+       "      <td>senior</td>\n",
+       "      <td>medium</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>36</td>\n",
+       "      <td>101.1</td>\n",
+       "      <td>1.83</td>\n",
+       "      <td>34.28000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Chennai</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>30.189017</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>39</td>\n",
+       "      <td>56.8</td>\n",
+       "      <td>1.64</td>\n",
+       "      <td>36.64000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>21.118382</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>low</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>22</td>\n",
+       "      <td>109.4</td>\n",
+       "      <td>1.55</td>\n",
+       "      <td>3.34000</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Mumbai</td>\n",
+       "      <td>student</td>\n",
+       "      <td>Medium</td>\n",
+       "      <td>45.535900</td>\n",
+       "      <td>young</td>\n",
+       "      <td>high</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>69</td>\n",
+       "      <td>62.2</td>\n",
+       "      <td>1.60</td>\n",
+       "      <td>3.94000</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>High</td>\n",
+       "      <td>24.296875</td>\n",
+       "      <td>senior</td>\n",
+       "      <td>medium</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>95</th>\n",
+       "      <td>36</td>\n",
+       "      <td>52.8</td>\n",
+       "      <td>1.57</td>\n",
+       "      <td>19.64000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>21.420747</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>low</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>96</th>\n",
+       "      <td>26</td>\n",
+       "      <td>113.8</td>\n",
+       "      <td>1.54</td>\n",
+       "      <td>34.01000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Delhi</td>\n",
+       "      <td>private_job</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>47.984483</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>97</th>\n",
+       "      <td>52</td>\n",
+       "      <td>60.8</td>\n",
+       "      <td>1.80</td>\n",
+       "      <td>44.86000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Hyderabad</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>18.765432</td>\n",
+       "      <td>middle_age</td>\n",
+       "      <td>low</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>98</th>\n",
+       "      <td>27</td>\n",
+       "      <td>101.1</td>\n",
+       "      <td>1.82</td>\n",
+       "      <td>28.30000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Kolkata</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>30.521676</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>99</th>\n",
+       "      <td>40</td>\n",
+       "      <td>70.0</td>\n",
+       "      <td>1.59</td>\n",
+       "      <td>28.16664</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Bangalore</td>\n",
+       "      <td>government_job</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>27.688778</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>100 rows × 11 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    age  weight  height  income_lpa  smoker       city      occupation  \\\n",
+       "0    67   119.8    1.56     2.92000   False     Jaipur         retired   \n",
+       "1    36   101.1    1.83    34.28000   False    Chennai      freelancer   \n",
+       "2    39    56.8    1.64    36.64000   False     Indore      freelancer   \n",
+       "3    22   109.4    1.55     3.34000    True     Mumbai         student   \n",
+       "4    69    62.2    1.60     3.94000    True     Indore         retired   \n",
+       "..  ...     ...     ...         ...     ...        ...             ...   \n",
+       "95   36    52.8    1.57    19.64000   False     Indore  business_owner   \n",
+       "96   26   113.8    1.54    34.01000   False      Delhi     private_job   \n",
+       "97   52    60.8    1.80    44.86000   False  Hyderabad      freelancer   \n",
+       "98   27   101.1    1.82    28.30000   False    Kolkata  business_owner   \n",
+       "99   40    70.0    1.59    28.16664    True  Bangalore  government_job   \n",
+       "\n",
+       "   insurance_premium_category        bmi   age_group lifestyle_risk  \n",
+       "0                        High  49.227482      senior         medium  \n",
+       "1                         Low  30.189017       adult         medium  \n",
+       "2                         Low  21.118382       adult            low  \n",
+       "3                      Medium  45.535900       young           high  \n",
+       "4                        High  24.296875      senior         medium  \n",
+       "..                        ...        ...         ...            ...  \n",
+       "95                        Low  21.420747       adult            low  \n",
+       "96                        Low  47.984483       adult         medium  \n",
+       "97                        Low  18.765432  middle_age            low  \n",
+       "98                        Low  30.521676       adult         medium  \n",
+       "99                        Low  27.688778       adult         medium  \n",
+       "\n",
+       "[100 rows x 11 columns]"
+      ]
+     },
+     "execution_count": 38,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dff"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 39,
+   "id": "692117a8-1096-4585-a6a0-156f34702a3b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "\n",
+    "tier_1_cities = [\"Mumbai\", \"Delhi\", \"Bangalore\", \"Chennai\", \"Kolkata\", \"Hyderabad\", \"Pune\"]\n",
+    "tier_2_cities = [\n",
+    "    \"Jaipur\", \"Chandigarh\", \"Indore\", \"Lucknow\", \"Patna\", \"Ranchi\", \"Visakhapatnam\", \"Coimbatore\",\n",
+    "    \"Bhopal\", \"Nagpur\", \"Vadodara\", \"Surat\", \"Rajkot\", \"Jodhpur\", \"Raipur\", \"Amritsar\", \"Varanasi\",\n",
+    "    \"Agra\", \"Dehradun\", \"Mysore\", \"Jabalpur\", \"Guwahati\", \"Thiruvananthapuram\", \"Ludhiana\", \"Nashik\",\n",
+    "    \"Allahabad\", \"Udaipur\", \"Aurangabad\", \"Hubli\", \"Belgaum\", \"Salem\", \"Vijayawada\", \"Tiruchirappalli\",\n",
+    "    \"Bhavnagar\", \"Gwalior\", \"Dhanbad\", \"Bareilly\", \"Aligarh\", \"Gaya\", \"Kozhikode\", \"Warangal\",\n",
+    "    \"Kolhapur\", \"Bilaspur\", \"Jalandhar\", \"Noida\", \"Guntur\", \"Asansol\", \"Siliguri\"\n",
+    "]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "id": "933a350d-24f3-4a7b-8713-71e66ebfda4a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def city_tier(city):\n",
+    "    if city in tier_1_cities:\n",
+    "        return 1\n",
+    "    elif city in tier_2_cities:\n",
+    "        return 2\n",
+    "    else:\n",
+    "        return 3"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 41,
+   "id": "217ea42a-182f-483c-97b2-18960aac119a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dff[\"city_tier\"]=dff[\"city\"].apply(city_tier)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 42,
+   "id": "2ef79d07-2c06-49e1-8c50-93fecabe618d",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>age</th>\n",
+       "      <th>weight</th>\n",
+       "      <th>height</th>\n",
+       "      <th>income_lpa</th>\n",
+       "      <th>smoker</th>\n",
+       "      <th>city</th>\n",
+       "      <th>occupation</th>\n",
+       "      <th>insurance_premium_category</th>\n",
+       "      <th>bmi</th>\n",
+       "      <th>age_group</th>\n",
+       "      <th>lifestyle_risk</th>\n",
+       "      <th>city_tier</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>67</td>\n",
+       "      <td>119.8</td>\n",
+       "      <td>1.56</td>\n",
+       "      <td>2.92000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Jaipur</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>High</td>\n",
+       "      <td>49.227482</td>\n",
+       "      <td>senior</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>36</td>\n",
+       "      <td>101.1</td>\n",
+       "      <td>1.83</td>\n",
+       "      <td>34.28000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Chennai</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>30.189017</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>39</td>\n",
+       "      <td>56.8</td>\n",
+       "      <td>1.64</td>\n",
+       "      <td>36.64000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>21.118382</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>low</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>22</td>\n",
+       "      <td>109.4</td>\n",
+       "      <td>1.55</td>\n",
+       "      <td>3.34000</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Mumbai</td>\n",
+       "      <td>student</td>\n",
+       "      <td>Medium</td>\n",
+       "      <td>45.535900</td>\n",
+       "      <td>young</td>\n",
+       "      <td>high</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>69</td>\n",
+       "      <td>62.2</td>\n",
+       "      <td>1.60</td>\n",
+       "      <td>3.94000</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>High</td>\n",
+       "      <td>24.296875</td>\n",
+       "      <td>senior</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>95</th>\n",
+       "      <td>36</td>\n",
+       "      <td>52.8</td>\n",
+       "      <td>1.57</td>\n",
+       "      <td>19.64000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Indore</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>21.420747</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>low</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>96</th>\n",
+       "      <td>26</td>\n",
+       "      <td>113.8</td>\n",
+       "      <td>1.54</td>\n",
+       "      <td>34.01000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Delhi</td>\n",
+       "      <td>private_job</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>47.984483</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>97</th>\n",
+       "      <td>52</td>\n",
+       "      <td>60.8</td>\n",
+       "      <td>1.80</td>\n",
+       "      <td>44.86000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Hyderabad</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>18.765432</td>\n",
+       "      <td>middle_age</td>\n",
+       "      <td>low</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>98</th>\n",
+       "      <td>27</td>\n",
+       "      <td>101.1</td>\n",
+       "      <td>1.82</td>\n",
+       "      <td>28.30000</td>\n",
+       "      <td>False</td>\n",
+       "      <td>Kolkata</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>30.521676</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>99</th>\n",
+       "      <td>40</td>\n",
+       "      <td>70.0</td>\n",
+       "      <td>1.59</td>\n",
+       "      <td>28.16664</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Bangalore</td>\n",
+       "      <td>government_job</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>27.688778</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>100 rows × 12 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    age  weight  height  income_lpa  smoker       city      occupation  \\\n",
+       "0    67   119.8    1.56     2.92000   False     Jaipur         retired   \n",
+       "1    36   101.1    1.83    34.28000   False    Chennai      freelancer   \n",
+       "2    39    56.8    1.64    36.64000   False     Indore      freelancer   \n",
+       "3    22   109.4    1.55     3.34000    True     Mumbai         student   \n",
+       "4    69    62.2    1.60     3.94000    True     Indore         retired   \n",
+       "..  ...     ...     ...         ...     ...        ...             ...   \n",
+       "95   36    52.8    1.57    19.64000   False     Indore  business_owner   \n",
+       "96   26   113.8    1.54    34.01000   False      Delhi     private_job   \n",
+       "97   52    60.8    1.80    44.86000   False  Hyderabad      freelancer   \n",
+       "98   27   101.1    1.82    28.30000   False    Kolkata  business_owner   \n",
+       "99   40    70.0    1.59    28.16664    True  Bangalore  government_job   \n",
+       "\n",
+       "   insurance_premium_category        bmi   age_group lifestyle_risk  city_tier  \n",
+       "0                        High  49.227482      senior         medium          2  \n",
+       "1                         Low  30.189017       adult         medium          1  \n",
+       "2                         Low  21.118382       adult            low          2  \n",
+       "3                      Medium  45.535900       young           high          1  \n",
+       "4                        High  24.296875      senior         medium          2  \n",
+       "..                        ...        ...         ...            ...        ...  \n",
+       "95                        Low  21.420747       adult            low          2  \n",
+       "96                        Low  47.984483       adult         medium          1  \n",
+       "97                        Low  18.765432  middle_age            low          1  \n",
+       "98                        Low  30.521676       adult         medium          1  \n",
+       "99                        Low  27.688778       adult         medium          1  \n",
+       "\n",
+       "[100 rows x 12 columns]"
+      ]
+     },
+     "execution_count": 42,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dff"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 43,
+   "id": "8a2f7168-1ea2-435f-804f-603d5374cc98",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dff.drop(columns=[\"age\",\"weight\",\"height\",\"city\",\"smoker\"],inplace=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 44,
+   "id": "2275bc13-cf87-4632-8907-9619ba210475",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>income_lpa</th>\n",
+       "      <th>occupation</th>\n",
+       "      <th>insurance_premium_category</th>\n",
+       "      <th>bmi</th>\n",
+       "      <th>age_group</th>\n",
+       "      <th>lifestyle_risk</th>\n",
+       "      <th>city_tier</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>2.92000</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>High</td>\n",
+       "      <td>49.227482</td>\n",
+       "      <td>senior</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>34.28000</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>30.189017</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>36.64000</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>21.118382</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>low</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>3.34000</td>\n",
+       "      <td>student</td>\n",
+       "      <td>Medium</td>\n",
+       "      <td>45.535900</td>\n",
+       "      <td>young</td>\n",
+       "      <td>high</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>3.94000</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>High</td>\n",
+       "      <td>24.296875</td>\n",
+       "      <td>senior</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>95</th>\n",
+       "      <td>19.64000</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>21.420747</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>low</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>96</th>\n",
+       "      <td>34.01000</td>\n",
+       "      <td>private_job</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>47.984483</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>97</th>\n",
+       "      <td>44.86000</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>18.765432</td>\n",
+       "      <td>middle_age</td>\n",
+       "      <td>low</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>98</th>\n",
+       "      <td>28.30000</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>30.521676</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>99</th>\n",
+       "      <td>28.16664</td>\n",
+       "      <td>government_job</td>\n",
+       "      <td>Low</td>\n",
+       "      <td>27.688778</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>100 rows × 7 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    income_lpa      occupation insurance_premium_category        bmi  \\\n",
+       "0      2.92000         retired                       High  49.227482   \n",
+       "1     34.28000      freelancer                        Low  30.189017   \n",
+       "2     36.64000      freelancer                        Low  21.118382   \n",
+       "3      3.34000         student                     Medium  45.535900   \n",
+       "4      3.94000         retired                       High  24.296875   \n",
+       "..         ...             ...                        ...        ...   \n",
+       "95    19.64000  business_owner                        Low  21.420747   \n",
+       "96    34.01000     private_job                        Low  47.984483   \n",
+       "97    44.86000      freelancer                        Low  18.765432   \n",
+       "98    28.30000  business_owner                        Low  30.521676   \n",
+       "99    28.16664  government_job                        Low  27.688778   \n",
+       "\n",
+       "     age_group lifestyle_risk  city_tier  \n",
+       "0       senior         medium          2  \n",
+       "1        adult         medium          1  \n",
+       "2        adult            low          2  \n",
+       "3        young           high          1  \n",
+       "4       senior         medium          2  \n",
+       "..         ...            ...        ...  \n",
+       "95       adult            low          2  \n",
+       "96       adult         medium          1  \n",
+       "97  middle_age            low          1  \n",
+       "98       adult         medium          1  \n",
+       "99       adult         medium          1  \n",
+       "\n",
+       "[100 rows x 7 columns]"
+      ]
+     },
+     "execution_count": 44,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dff"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 46,
+   "id": "0aff7cf1-a4c8-4496-8604-9e0c1e809d9f",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['income_lpa', 'occupation', 'insurance_premium_category', 'bmi',\n",
+       "       'age_group', 'lifestyle_risk', 'city_tier'],\n",
+       "      dtype='object')"
+      ]
+     },
+     "execution_count": 46,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dff.columns"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "id": "830c47f5-6d06-4d1c-8f54-6ab2f4ae514f",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "X=dff[['income_lpa', 'occupation', 'bmi',\n",
+    "       'age_group', 'lifestyle_risk', 'city_tier']]\n",
+    "Y=dff[\"insurance_premium_category\"]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "id": "6be802df-94d0-4543-900c-87145122e8e7",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>income_lpa</th>\n",
+       "      <th>occupation</th>\n",
+       "      <th>bmi</th>\n",
+       "      <th>age_group</th>\n",
+       "      <th>lifestyle_risk</th>\n",
+       "      <th>city_tier</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>2.92000</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>49.227482</td>\n",
+       "      <td>senior</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>34.28000</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>30.189017</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>36.64000</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>21.118382</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>low</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>3.34000</td>\n",
+       "      <td>student</td>\n",
+       "      <td>45.535900</td>\n",
+       "      <td>young</td>\n",
+       "      <td>high</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>3.94000</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>24.296875</td>\n",
+       "      <td>senior</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>95</th>\n",
+       "      <td>19.64000</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>21.420747</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>low</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>96</th>\n",
+       "      <td>34.01000</td>\n",
+       "      <td>private_job</td>\n",
+       "      <td>47.984483</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>97</th>\n",
+       "      <td>44.86000</td>\n",
+       "      <td>freelancer</td>\n",
+       "      <td>18.765432</td>\n",
+       "      <td>middle_age</td>\n",
+       "      <td>low</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>98</th>\n",
+       "      <td>28.30000</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>30.521676</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>99</th>\n",
+       "      <td>28.16664</td>\n",
+       "      <td>government_job</td>\n",
+       "      <td>27.688778</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>100 rows × 6 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    income_lpa      occupation        bmi   age_group lifestyle_risk  \\\n",
+       "0      2.92000         retired  49.227482      senior         medium   \n",
+       "1     34.28000      freelancer  30.189017       adult         medium   \n",
+       "2     36.64000      freelancer  21.118382       adult            low   \n",
+       "3      3.34000         student  45.535900       young           high   \n",
+       "4      3.94000         retired  24.296875      senior         medium   \n",
+       "..         ...             ...        ...         ...            ...   \n",
+       "95    19.64000  business_owner  21.420747       adult            low   \n",
+       "96    34.01000     private_job  47.984483       adult         medium   \n",
+       "97    44.86000      freelancer  18.765432  middle_age            low   \n",
+       "98    28.30000  business_owner  30.521676       adult         medium   \n",
+       "99    28.16664  government_job  27.688778       adult         medium   \n",
+       "\n",
+       "    city_tier  \n",
+       "0           2  \n",
+       "1           1  \n",
+       "2           2  \n",
+       "3           1  \n",
+       "4           2  \n",
+       "..        ...  \n",
+       "95          2  \n",
+       "96          1  \n",
+       "97          1  \n",
+       "98          1  \n",
+       "99          1  \n",
+       "\n",
+       "[100 rows x 6 columns]"
+      ]
+     },
+     "execution_count": 51,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 52,
+   "id": "bb74590e-7caf-45ff-bab4-c95a7e7b3880",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0       High\n",
+       "1        Low\n",
+       "2        Low\n",
+       "3     Medium\n",
+       "4       High\n",
+       "       ...  \n",
+       "95       Low\n",
+       "96       Low\n",
+       "97       Low\n",
+       "98       Low\n",
+       "99       Low\n",
+       "Name: insurance_premium_category, Length: 100, dtype: object"
+      ]
+     },
+     "execution_count": 52,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "Y"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 53,
+   "id": "f4ffc315-bcf5-4dfd-8d2a-8f9a6ec34325",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cat_features=['occupation','age_group', 'lifestyle_risk', 'city_tier']\n",
+    "num_features=['income_lpa','bmi']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 56,
+   "id": "d1681225-bef7-4d10-874c-ab96f5989dd5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# create column transformer and OHE\n",
+    "preprocessing=ColumnTransformer(transformers=[\n",
+    "    (\"cat\",OneHotEncoder(),cat_features),\n",
+    "    (\"num\",\"passthrough\",num_features)\n",
+    "])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 59,
+   "id": "82e8a55b-0494-40ec-81d5-2d10050e93db",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Create a pipeline with preprocessin and RandomForestClassifer\n",
+    "pipeline=Pipeline(steps=[\n",
+    "    (\"preprocessing\",preprocessing),\n",
+    "    (\"classifier\",RandomForestClassifier(random_state=42))\n",
+    "])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 61,
+   "id": "e1bf11cf-7a8a-4ff8-8deb-6206a704df3d",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<style>#sk-container-id-3 {\n",
+       "  /* Definition of color scheme common for light and dark mode */\n",
+       "  --sklearn-color-text: #000;\n",
+       "  --sklearn-color-text-muted: #666;\n",
+       "  --sklearn-color-line: gray;\n",
+       "  /* Definition of color scheme for unfitted estimators */\n",
+       "  --sklearn-color-unfitted-level-0: #fff5e6;\n",
+       "  --sklearn-color-unfitted-level-1: #f6e4d2;\n",
+       "  --sklearn-color-unfitted-level-2: #ffe0b3;\n",
+       "  --sklearn-color-unfitted-level-3: chocolate;\n",
+       "  /* Definition of color scheme for fitted estimators */\n",
+       "  --sklearn-color-fitted-level-0: #f0f8ff;\n",
+       "  --sklearn-color-fitted-level-1: #d4ebff;\n",
+       "  --sklearn-color-fitted-level-2: #b3dbfd;\n",
+       "  --sklearn-color-fitted-level-3: cornflowerblue;\n",
+       "\n",
+       "  /* Specific color for light theme */\n",
+       "  --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));\n",
+       "  --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, white)));\n",
+       "  --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));\n",
+       "  --sklearn-color-icon: #696969;\n",
+       "\n",
+       "  @media (prefers-color-scheme: dark) {\n",
+       "    /* Redefinition of color scheme for dark theme */\n",
+       "    --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));\n",
+       "    --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, #111)));\n",
+       "    --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));\n",
+       "    --sklearn-color-icon: #878787;\n",
+       "  }\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 {\n",
+       "  color: var(--sklearn-color-text);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 pre {\n",
+       "  padding: 0;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 input.sk-hidden--visually {\n",
+       "  border: 0;\n",
+       "  clip: rect(1px 1px 1px 1px);\n",
+       "  clip: rect(1px, 1px, 1px, 1px);\n",
+       "  height: 1px;\n",
+       "  margin: -1px;\n",
+       "  overflow: hidden;\n",
+       "  padding: 0;\n",
+       "  position: absolute;\n",
+       "  width: 1px;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-dashed-wrapped {\n",
+       "  border: 1px dashed var(--sklearn-color-line);\n",
+       "  margin: 0 0.4em 0.5em 0.4em;\n",
+       "  box-sizing: border-box;\n",
+       "  padding-bottom: 0.4em;\n",
+       "  background-color: var(--sklearn-color-background);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-container {\n",
+       "  /* jupyter's `normalize.less` sets `[hidden] { display: none; }`\n",
+       "     but bootstrap.min.css set `[hidden] { display: none !important; }`\n",
+       "     so we also need the `!important` here to be able to override the\n",
+       "     default hidden behavior on the sphinx rendered scikit-learn.org.\n",
+       "     See: https://github.com/scikit-learn/scikit-learn/issues/21755 */\n",
+       "  display: inline-block !important;\n",
+       "  position: relative;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-text-repr-fallback {\n",
+       "  display: none;\n",
+       "}\n",
+       "\n",
+       "div.sk-parallel-item,\n",
+       "div.sk-serial,\n",
+       "div.sk-item {\n",
+       "  /* draw centered vertical line to link estimators */\n",
+       "  background-image: linear-gradient(var(--sklearn-color-text-on-default-background), var(--sklearn-color-text-on-default-background));\n",
+       "  background-size: 2px 100%;\n",
+       "  background-repeat: no-repeat;\n",
+       "  background-position: center center;\n",
+       "}\n",
+       "\n",
+       "/* Parallel-specific style estimator block */\n",
+       "\n",
+       "#sk-container-id-3 div.sk-parallel-item::after {\n",
+       "  content: \"\";\n",
+       "  width: 100%;\n",
+       "  border-bottom: 2px solid var(--sklearn-color-text-on-default-background);\n",
+       "  flex-grow: 1;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-parallel {\n",
+       "  display: flex;\n",
+       "  align-items: stretch;\n",
+       "  justify-content: center;\n",
+       "  background-color: var(--sklearn-color-background);\n",
+       "  position: relative;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-parallel-item {\n",
+       "  display: flex;\n",
+       "  flex-direction: column;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-parallel-item:first-child::after {\n",
+       "  align-self: flex-end;\n",
+       "  width: 50%;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-parallel-item:last-child::after {\n",
+       "  align-self: flex-start;\n",
+       "  width: 50%;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-parallel-item:only-child::after {\n",
+       "  width: 0;\n",
+       "}\n",
+       "\n",
+       "/* Serial-specific style estimator block */\n",
+       "\n",
+       "#sk-container-id-3 div.sk-serial {\n",
+       "  display: flex;\n",
+       "  flex-direction: column;\n",
+       "  align-items: center;\n",
+       "  background-color: var(--sklearn-color-background);\n",
+       "  padding-right: 1em;\n",
+       "  padding-left: 1em;\n",
+       "}\n",
+       "\n",
+       "\n",
+       "/* Toggleable style: style used for estimator/Pipeline/ColumnTransformer box that is\n",
+       "clickable and can be expanded/collapsed.\n",
+       "- Pipeline and ColumnTransformer use this feature and define the default style\n",
+       "- Estimators will overwrite some part of the style using the `sk-estimator` class\n",
+       "*/\n",
+       "\n",
+       "/* Pipeline and ColumnTransformer style (default) */\n",
+       "\n",
+       "#sk-container-id-3 div.sk-toggleable {\n",
+       "  /* Default theme specific background. It is overwritten whether we have a\n",
+       "  specific estimator or a Pipeline/ColumnTransformer */\n",
+       "  background-color: var(--sklearn-color-background);\n",
+       "}\n",
+       "\n",
+       "/* Toggleable label */\n",
+       "#sk-container-id-3 label.sk-toggleable__label {\n",
+       "  cursor: pointer;\n",
+       "  display: flex;\n",
+       "  width: 100%;\n",
+       "  margin-bottom: 0;\n",
+       "  padding: 0.5em;\n",
+       "  box-sizing: border-box;\n",
+       "  text-align: center;\n",
+       "  align-items: start;\n",
+       "  justify-content: space-between;\n",
+       "  gap: 0.5em;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 label.sk-toggleable__label .caption {\n",
+       "  font-size: 0.6rem;\n",
+       "  font-weight: lighter;\n",
+       "  color: var(--sklearn-color-text-muted);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 label.sk-toggleable__label-arrow:before {\n",
+       "  /* Arrow on the left of the label */\n",
+       "  content: \"▸\";\n",
+       "  float: left;\n",
+       "  margin-right: 0.25em;\n",
+       "  color: var(--sklearn-color-icon);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 label.sk-toggleable__label-arrow:hover:before {\n",
+       "  color: var(--sklearn-color-text);\n",
+       "}\n",
+       "\n",
+       "/* Toggleable content - dropdown */\n",
+       "\n",
+       "#sk-container-id-3 div.sk-toggleable__content {\n",
+       "  display: none;\n",
+       "  text-align: left;\n",
+       "  /* unfitted */\n",
+       "  background-color: var(--sklearn-color-unfitted-level-0);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-toggleable__content.fitted {\n",
+       "  /* fitted */\n",
+       "  background-color: var(--sklearn-color-fitted-level-0);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-toggleable__content pre {\n",
+       "  margin: 0.2em;\n",
+       "  border-radius: 0.25em;\n",
+       "  color: var(--sklearn-color-text);\n",
+       "  /* unfitted */\n",
+       "  background-color: var(--sklearn-color-unfitted-level-0);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-toggleable__content.fitted pre {\n",
+       "  /* unfitted */\n",
+       "  background-color: var(--sklearn-color-fitted-level-0);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 input.sk-toggleable__control:checked~div.sk-toggleable__content {\n",
+       "  /* Expand drop-down */\n",
+       "  display: block;\n",
+       "  width: 100%;\n",
+       "  overflow: visible;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {\n",
+       "  content: \"▾\";\n",
+       "}\n",
+       "\n",
+       "/* Pipeline/ColumnTransformer-specific style */\n",
+       "\n",
+       "#sk-container-id-3 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {\n",
+       "  color: var(--sklearn-color-text);\n",
+       "  background-color: var(--sklearn-color-unfitted-level-2);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-label.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {\n",
+       "  background-color: var(--sklearn-color-fitted-level-2);\n",
+       "}\n",
+       "\n",
+       "/* Estimator-specific style */\n",
+       "\n",
+       "/* Colorize estimator box */\n",
+       "#sk-container-id-3 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {\n",
+       "  /* unfitted */\n",
+       "  background-color: var(--sklearn-color-unfitted-level-2);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-estimator.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {\n",
+       "  /* fitted */\n",
+       "  background-color: var(--sklearn-color-fitted-level-2);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-label label.sk-toggleable__label,\n",
+       "#sk-container-id-3 div.sk-label label {\n",
+       "  /* The background is the default theme color */\n",
+       "  color: var(--sklearn-color-text-on-default-background);\n",
+       "}\n",
+       "\n",
+       "/* On hover, darken the color of the background */\n",
+       "#sk-container-id-3 div.sk-label:hover label.sk-toggleable__label {\n",
+       "  color: var(--sklearn-color-text);\n",
+       "  background-color: var(--sklearn-color-unfitted-level-2);\n",
+       "}\n",
+       "\n",
+       "/* Label box, darken color on hover, fitted */\n",
+       "#sk-container-id-3 div.sk-label.fitted:hover label.sk-toggleable__label.fitted {\n",
+       "  color: var(--sklearn-color-text);\n",
+       "  background-color: var(--sklearn-color-fitted-level-2);\n",
+       "}\n",
+       "\n",
+       "/* Estimator label */\n",
+       "\n",
+       "#sk-container-id-3 div.sk-label label {\n",
+       "  font-family: monospace;\n",
+       "  font-weight: bold;\n",
+       "  display: inline-block;\n",
+       "  line-height: 1.2em;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-label-container {\n",
+       "  text-align: center;\n",
+       "}\n",
+       "\n",
+       "/* Estimator-specific */\n",
+       "#sk-container-id-3 div.sk-estimator {\n",
+       "  font-family: monospace;\n",
+       "  border: 1px dotted var(--sklearn-color-border-box);\n",
+       "  border-radius: 0.25em;\n",
+       "  box-sizing: border-box;\n",
+       "  margin-bottom: 0.5em;\n",
+       "  /* unfitted */\n",
+       "  background-color: var(--sklearn-color-unfitted-level-0);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-estimator.fitted {\n",
+       "  /* fitted */\n",
+       "  background-color: var(--sklearn-color-fitted-level-0);\n",
+       "}\n",
+       "\n",
+       "/* on hover */\n",
+       "#sk-container-id-3 div.sk-estimator:hover {\n",
+       "  /* unfitted */\n",
+       "  background-color: var(--sklearn-color-unfitted-level-2);\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 div.sk-estimator.fitted:hover {\n",
+       "  /* fitted */\n",
+       "  background-color: var(--sklearn-color-fitted-level-2);\n",
+       "}\n",
+       "\n",
+       "/* Specification for estimator info (e.g. \"i\" and \"?\") */\n",
+       "\n",
+       "/* Common style for \"i\" and \"?\" */\n",
+       "\n",
+       ".sk-estimator-doc-link,\n",
+       "a:link.sk-estimator-doc-link,\n",
+       "a:visited.sk-estimator-doc-link {\n",
+       "  float: right;\n",
+       "  font-size: smaller;\n",
+       "  line-height: 1em;\n",
+       "  font-family: monospace;\n",
+       "  background-color: var(--sklearn-color-background);\n",
+       "  border-radius: 1em;\n",
+       "  height: 1em;\n",
+       "  width: 1em;\n",
+       "  text-decoration: none !important;\n",
+       "  margin-left: 0.5em;\n",
+       "  text-align: center;\n",
+       "  /* unfitted */\n",
+       "  border: var(--sklearn-color-unfitted-level-1) 1pt solid;\n",
+       "  color: var(--sklearn-color-unfitted-level-1);\n",
+       "}\n",
+       "\n",
+       ".sk-estimator-doc-link.fitted,\n",
+       "a:link.sk-estimator-doc-link.fitted,\n",
+       "a:visited.sk-estimator-doc-link.fitted {\n",
+       "  /* fitted */\n",
+       "  border: var(--sklearn-color-fitted-level-1) 1pt solid;\n",
+       "  color: var(--sklearn-color-fitted-level-1);\n",
+       "}\n",
+       "\n",
+       "/* On hover */\n",
+       "div.sk-estimator:hover .sk-estimator-doc-link:hover,\n",
+       ".sk-estimator-doc-link:hover,\n",
+       "div.sk-label-container:hover .sk-estimator-doc-link:hover,\n",
+       ".sk-estimator-doc-link:hover {\n",
+       "  /* unfitted */\n",
+       "  background-color: var(--sklearn-color-unfitted-level-3);\n",
+       "  color: var(--sklearn-color-background);\n",
+       "  text-decoration: none;\n",
+       "}\n",
+       "\n",
+       "div.sk-estimator.fitted:hover .sk-estimator-doc-link.fitted:hover,\n",
+       ".sk-estimator-doc-link.fitted:hover,\n",
+       "div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,\n",
+       ".sk-estimator-doc-link.fitted:hover {\n",
+       "  /* fitted */\n",
+       "  background-color: var(--sklearn-color-fitted-level-3);\n",
+       "  color: var(--sklearn-color-background);\n",
+       "  text-decoration: none;\n",
+       "}\n",
+       "\n",
+       "/* Span, style for the box shown on hovering the info icon */\n",
+       ".sk-estimator-doc-link span {\n",
+       "  display: none;\n",
+       "  z-index: 9999;\n",
+       "  position: relative;\n",
+       "  font-weight: normal;\n",
+       "  right: .2ex;\n",
+       "  padding: .5ex;\n",
+       "  margin: .5ex;\n",
+       "  width: min-content;\n",
+       "  min-width: 20ex;\n",
+       "  max-width: 50ex;\n",
+       "  color: var(--sklearn-color-text);\n",
+       "  box-shadow: 2pt 2pt 4pt #999;\n",
+       "  /* unfitted */\n",
+       "  background: var(--sklearn-color-unfitted-level-0);\n",
+       "  border: .5pt solid var(--sklearn-color-unfitted-level-3);\n",
+       "}\n",
+       "\n",
+       ".sk-estimator-doc-link.fitted span {\n",
+       "  /* fitted */\n",
+       "  background: var(--sklearn-color-fitted-level-0);\n",
+       "  border: var(--sklearn-color-fitted-level-3);\n",
+       "}\n",
+       "\n",
+       ".sk-estimator-doc-link:hover span {\n",
+       "  display: block;\n",
+       "}\n",
+       "\n",
+       "/* \"?\"-specific style due to the `<a>` HTML tag */\n",
+       "\n",
+       "#sk-container-id-3 a.estimator_doc_link {\n",
+       "  float: right;\n",
+       "  font-size: 1rem;\n",
+       "  line-height: 1em;\n",
+       "  font-family: monospace;\n",
+       "  background-color: var(--sklearn-color-background);\n",
+       "  border-radius: 1rem;\n",
+       "  height: 1rem;\n",
+       "  width: 1rem;\n",
+       "  text-decoration: none;\n",
+       "  /* unfitted */\n",
+       "  color: var(--sklearn-color-unfitted-level-1);\n",
+       "  border: var(--sklearn-color-unfitted-level-1) 1pt solid;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 a.estimator_doc_link.fitted {\n",
+       "  /* fitted */\n",
+       "  border: var(--sklearn-color-fitted-level-1) 1pt solid;\n",
+       "  color: var(--sklearn-color-fitted-level-1);\n",
+       "}\n",
+       "\n",
+       "/* On hover */\n",
+       "#sk-container-id-3 a.estimator_doc_link:hover {\n",
+       "  /* unfitted */\n",
+       "  background-color: var(--sklearn-color-unfitted-level-3);\n",
+       "  color: var(--sklearn-color-background);\n",
+       "  text-decoration: none;\n",
+       "}\n",
+       "\n",
+       "#sk-container-id-3 a.estimator_doc_link.fitted:hover {\n",
+       "  /* fitted */\n",
+       "  background-color: var(--sklearn-color-fitted-level-3);\n",
+       "}\n",
+       "\n",
+       ".estimator-table summary {\n",
+       "    padding: .5rem;\n",
+       "    font-family: monospace;\n",
+       "    cursor: pointer;\n",
+       "}\n",
+       "\n",
+       ".estimator-table details[open] {\n",
+       "    padding-left: 0.1rem;\n",
+       "    padding-right: 0.1rem;\n",
+       "    padding-bottom: 0.3rem;\n",
+       "}\n",
+       "\n",
+       ".estimator-table .parameters-table {\n",
+       "    margin-left: auto !important;\n",
+       "    margin-right: auto !important;\n",
+       "}\n",
+       "\n",
+       ".estimator-table .parameters-table tr:nth-child(odd) {\n",
+       "    background-color: #fff;\n",
+       "}\n",
+       "\n",
+       ".estimator-table .parameters-table tr:nth-child(even) {\n",
+       "    background-color: #f6f6f6;\n",
+       "}\n",
+       "\n",
+       ".estimator-table .parameters-table tr:hover {\n",
+       "    background-color: #e0e0e0;\n",
+       "}\n",
+       "\n",
+       ".estimator-table table td {\n",
+       "    border: 1px solid rgba(106, 105, 104, 0.232);\n",
+       "}\n",
+       "\n",
+       ".user-set td {\n",
+       "    color:rgb(255, 94, 0);\n",
+       "    text-align: left;\n",
+       "}\n",
+       "\n",
+       ".user-set td.value pre {\n",
+       "    color:rgb(255, 94, 0) !important;\n",
+       "    background-color: transparent !important;\n",
+       "}\n",
+       "\n",
+       ".default td {\n",
+       "    color: black;\n",
+       "    text-align: left;\n",
+       "}\n",
+       "\n",
+       ".user-set td i,\n",
+       ".default td i {\n",
+       "    color: black;\n",
+       "}\n",
+       "\n",
+       ".copy-paste-icon {\n",
+       "    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NDggNTEyIj48IS0tIUZvbnQgQXdlc29tZSBGcmVlIDYuNy4yIGJ5IEBmb250YXdlc29tZSAtIGh0dHBzOi8vZm9udGF3ZXNvbWUuY29tIExpY2Vuc2UgLSBodHRwczovL2ZvbnRhd2Vzb21lLmNvbS9saWNlbnNlL2ZyZWUgQ29weXJpZ2h0IDIwMjUgRm9udGljb25zLCBJbmMuLS0+PHBhdGggZD0iTTIwOCAwTDMzMi4xIDBjMTIuNyAwIDI0LjkgNS4xIDMzLjkgMTQuMWw2Ny45IDY3LjljOSA5IDE0LjEgMjEuMiAxNC4xIDMzLjlMNDQ4IDMzNmMwIDI2LjUtMjEuNSA0OC00OCA0OGwtMTkyIDBjLTI2LjUgMC00OC0yMS41LTQ4LTQ4bDAtMjg4YzAtMjYuNSAyMS41LTQ4IDQ4LTQ4ek00OCAxMjhsODAgMCAwIDY0LTY0IDAgMCAyNTYgMTkyIDAgMC0zMiA2NCAwIDAgNDhjMCAyNi41LTIxLjUgNDgtNDggNDhMNDggNTEyYy0yNi41IDAtNDgtMjEuNS00OC00OEwwIDE3NmMwLTI2LjUgMjEuNS00OCA0OC00OHoiLz48L3N2Zz4=);\n",
+       "    background-repeat: no-repeat;\n",
+       "    background-size: 14px 14px;\n",
+       "    background-position: 0;\n",
+       "    display: inline-block;\n",
+       "    width: 14px;\n",
+       "    height: 14px;\n",
+       "    cursor: pointer;\n",
+       "}\n",
+       "</style><body><div id=\"sk-container-id-3\" class=\"sk-top-container\"><div class=\"sk-text-repr-fallback\"><pre>Pipeline(steps=[(&#x27;preprocessing&#x27;,\n",
+       "                 ColumnTransformer(transformers=[(&#x27;cat&#x27;, OneHotEncoder(),\n",
+       "                                                  [&#x27;occupation&#x27;, &#x27;age_group&#x27;,\n",
+       "                                                   &#x27;lifestyle_risk&#x27;,\n",
+       "                                                   &#x27;city_tier&#x27;]),\n",
+       "                                                 (&#x27;num&#x27;, &#x27;passthrough&#x27;,\n",
+       "                                                  [&#x27;income_lpa&#x27;, &#x27;bmi&#x27;])])),\n",
+       "                (&#x27;classifier&#x27;, RandomForestClassifier(random_state=42))])</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class=\"sk-container\" hidden><div class=\"sk-item sk-dashed-wrapped\"><div class=\"sk-label-container\"><div class=\"sk-label fitted sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-13\" type=\"checkbox\" ><label for=\"sk-estimator-id-13\" class=\"sk-toggleable__label fitted sk-toggleable__label-arrow\"><div><div>Pipeline</div></div><div><a class=\"sk-estimator-doc-link fitted\" rel=\"noreferrer\" target=\"_blank\" href=\"https://scikit-learn.org/1.7/modules/generated/sklearn.pipeline.Pipeline.html\">?<span>Documentation for Pipeline</span></a><span class=\"sk-estimator-doc-link fitted\">i<span>Fitted</span></span></div></label><div class=\"sk-toggleable__content fitted\" data-param-prefix=\"\">\n",
+       "        <div class=\"estimator-table\">\n",
+       "            <details>\n",
+       "                <summary>Parameters</summary>\n",
+       "                <table class=\"parameters-table\">\n",
+       "                  <tbody>\n",
+       "                    \n",
+       "        <tr class=\"user-set\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('steps',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">steps&nbsp;</td>\n",
+       "            <td class=\"value\">[(&#x27;preprocessing&#x27;, ...), (&#x27;classifier&#x27;, ...)]</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('transform_input',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">transform_input&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('memory',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">memory&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('verbose',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">verbose&nbsp;</td>\n",
+       "            <td class=\"value\">False</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "                  </tbody>\n",
+       "                </table>\n",
+       "            </details>\n",
+       "        </div>\n",
+       "    </div></div></div><div class=\"sk-serial\"><div class=\"sk-item sk-dashed-wrapped\"><div class=\"sk-label-container\"><div class=\"sk-label fitted sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-14\" type=\"checkbox\" ><label for=\"sk-estimator-id-14\" class=\"sk-toggleable__label fitted sk-toggleable__label-arrow\"><div><div>preprocessing: ColumnTransformer</div></div><div><a class=\"sk-estimator-doc-link fitted\" rel=\"noreferrer\" target=\"_blank\" href=\"https://scikit-learn.org/1.7/modules/generated/sklearn.compose.ColumnTransformer.html\">?<span>Documentation for preprocessing: ColumnTransformer</span></a></div></label><div class=\"sk-toggleable__content fitted\" data-param-prefix=\"preprocessing__\">\n",
+       "        <div class=\"estimator-table\">\n",
+       "            <details>\n",
+       "                <summary>Parameters</summary>\n",
+       "                <table class=\"parameters-table\">\n",
+       "                  <tbody>\n",
+       "                    \n",
+       "        <tr class=\"user-set\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('transformers',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">transformers&nbsp;</td>\n",
+       "            <td class=\"value\">[(&#x27;cat&#x27;, ...), (&#x27;num&#x27;, ...)]</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('remainder',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">remainder&nbsp;</td>\n",
+       "            <td class=\"value\">&#x27;drop&#x27;</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('sparse_threshold',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">sparse_threshold&nbsp;</td>\n",
+       "            <td class=\"value\">0.3</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('n_jobs',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">n_jobs&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('transformer_weights',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">transformer_weights&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('verbose',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">verbose&nbsp;</td>\n",
+       "            <td class=\"value\">False</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('verbose_feature_names_out',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">verbose_feature_names_out&nbsp;</td>\n",
+       "            <td class=\"value\">True</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('force_int_remainder_cols',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">force_int_remainder_cols&nbsp;</td>\n",
+       "            <td class=\"value\">&#x27;deprecated&#x27;</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "                  </tbody>\n",
+       "                </table>\n",
+       "            </details>\n",
+       "        </div>\n",
+       "    </div></div></div><div class=\"sk-parallel\"><div class=\"sk-parallel-item\"><div class=\"sk-item\"><div class=\"sk-label-container\"><div class=\"sk-label fitted sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-15\" type=\"checkbox\" ><label for=\"sk-estimator-id-15\" class=\"sk-toggleable__label fitted sk-toggleable__label-arrow\"><div><div>cat</div></div></label><div class=\"sk-toggleable__content fitted\" data-param-prefix=\"preprocessing__cat__\"><pre>[&#x27;occupation&#x27;, &#x27;age_group&#x27;, &#x27;lifestyle_risk&#x27;, &#x27;city_tier&#x27;]</pre></div></div></div><div class=\"sk-serial\"><div class=\"sk-item\"><div class=\"sk-estimator fitted sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-16\" type=\"checkbox\" ><label for=\"sk-estimator-id-16\" class=\"sk-toggleable__label fitted sk-toggleable__label-arrow\"><div><div>OneHotEncoder</div></div><div><a class=\"sk-estimator-doc-link fitted\" rel=\"noreferrer\" target=\"_blank\" href=\"https://scikit-learn.org/1.7/modules/generated/sklearn.preprocessing.OneHotEncoder.html\">?<span>Documentation for OneHotEncoder</span></a></div></label><div class=\"sk-toggleable__content fitted\" data-param-prefix=\"preprocessing__cat__\">\n",
+       "        <div class=\"estimator-table\">\n",
+       "            <details>\n",
+       "                <summary>Parameters</summary>\n",
+       "                <table class=\"parameters-table\">\n",
+       "                  <tbody>\n",
+       "                    \n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('categories',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">categories&nbsp;</td>\n",
+       "            <td class=\"value\">&#x27;auto&#x27;</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('drop',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">drop&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('sparse_output',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">sparse_output&nbsp;</td>\n",
+       "            <td class=\"value\">True</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('dtype',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">dtype&nbsp;</td>\n",
+       "            <td class=\"value\">&lt;class &#x27;numpy.float64&#x27;&gt;</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('handle_unknown',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">handle_unknown&nbsp;</td>\n",
+       "            <td class=\"value\">&#x27;error&#x27;</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('min_frequency',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">min_frequency&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('max_categories',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">max_categories&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('feature_name_combiner',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">feature_name_combiner&nbsp;</td>\n",
+       "            <td class=\"value\">&#x27;concat&#x27;</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "                  </tbody>\n",
+       "                </table>\n",
+       "            </details>\n",
+       "        </div>\n",
+       "    </div></div></div></div></div></div><div class=\"sk-parallel-item\"><div class=\"sk-item\"><div class=\"sk-label-container\"><div class=\"sk-label fitted sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-17\" type=\"checkbox\" ><label for=\"sk-estimator-id-17\" class=\"sk-toggleable__label fitted sk-toggleable__label-arrow\"><div><div>num</div></div></label><div class=\"sk-toggleable__content fitted\" data-param-prefix=\"preprocessing__num__\"><pre>[&#x27;income_lpa&#x27;, &#x27;bmi&#x27;]</pre></div></div></div><div class=\"sk-serial\"><div class=\"sk-item\"><div class=\"sk-estimator fitted sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-18\" type=\"checkbox\" ><label for=\"sk-estimator-id-18\" class=\"sk-toggleable__label fitted sk-toggleable__label-arrow\"><div><div>passthrough</div></div></label><div class=\"sk-toggleable__content fitted\" data-param-prefix=\"preprocessing__num__\"><pre>passthrough</pre></div></div></div></div></div></div></div></div><div class=\"sk-item\"><div class=\"sk-estimator fitted sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-19\" type=\"checkbox\" ><label for=\"sk-estimator-id-19\" class=\"sk-toggleable__label fitted sk-toggleable__label-arrow\"><div><div>RandomForestClassifier</div></div><div><a class=\"sk-estimator-doc-link fitted\" rel=\"noreferrer\" target=\"_blank\" href=\"https://scikit-learn.org/1.7/modules/generated/sklearn.ensemble.RandomForestClassifier.html\">?<span>Documentation for RandomForestClassifier</span></a></div></label><div class=\"sk-toggleable__content fitted\" data-param-prefix=\"classifier__\">\n",
+       "        <div class=\"estimator-table\">\n",
+       "            <details>\n",
+       "                <summary>Parameters</summary>\n",
+       "                <table class=\"parameters-table\">\n",
+       "                  <tbody>\n",
+       "                    \n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('n_estimators',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">n_estimators&nbsp;</td>\n",
+       "            <td class=\"value\">100</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('criterion',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">criterion&nbsp;</td>\n",
+       "            <td class=\"value\">&#x27;gini&#x27;</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('max_depth',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">max_depth&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('min_samples_split',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">min_samples_split&nbsp;</td>\n",
+       "            <td class=\"value\">2</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('min_samples_leaf',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">min_samples_leaf&nbsp;</td>\n",
+       "            <td class=\"value\">1</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('min_weight_fraction_leaf',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">min_weight_fraction_leaf&nbsp;</td>\n",
+       "            <td class=\"value\">0.0</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('max_features',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">max_features&nbsp;</td>\n",
+       "            <td class=\"value\">&#x27;sqrt&#x27;</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('max_leaf_nodes',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">max_leaf_nodes&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('min_impurity_decrease',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">min_impurity_decrease&nbsp;</td>\n",
+       "            <td class=\"value\">0.0</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('bootstrap',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">bootstrap&nbsp;</td>\n",
+       "            <td class=\"value\">True</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('oob_score',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">oob_score&nbsp;</td>\n",
+       "            <td class=\"value\">False</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('n_jobs',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">n_jobs&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"user-set\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('random_state',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">random_state&nbsp;</td>\n",
+       "            <td class=\"value\">42</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('verbose',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">verbose&nbsp;</td>\n",
+       "            <td class=\"value\">0</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('warm_start',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">warm_start&nbsp;</td>\n",
+       "            <td class=\"value\">False</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('class_weight',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">class_weight&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('ccp_alpha',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">ccp_alpha&nbsp;</td>\n",
+       "            <td class=\"value\">0.0</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('max_samples',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">max_samples&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "\n",
+       "        <tr class=\"default\">\n",
+       "            <td><i class=\"copy-paste-icon\"\n",
+       "                 onclick=\"copyToClipboard('monotonic_cst',\n",
+       "                          this.parentElement.nextElementSibling)\"\n",
+       "            ></i></td>\n",
+       "            <td class=\"param\">monotonic_cst&nbsp;</td>\n",
+       "            <td class=\"value\">None</td>\n",
+       "        </tr>\n",
+       "    \n",
+       "                  </tbody>\n",
+       "                </table>\n",
+       "            </details>\n",
+       "        </div>\n",
+       "    </div></div></div></div></div></div></div><script>function copyToClipboard(text, element) {\n",
+       "    // Get the parameter prefix from the closest toggleable content\n",
+       "    const toggleableContent = element.closest('.sk-toggleable__content');\n",
+       "    const paramPrefix = toggleableContent ? toggleableContent.dataset.paramPrefix : '';\n",
+       "    const fullParamName = paramPrefix ? `${paramPrefix}${text}` : text;\n",
+       "\n",
+       "    const originalStyle = element.style;\n",
+       "    const computedStyle = window.getComputedStyle(element);\n",
+       "    const originalWidth = computedStyle.width;\n",
+       "    const originalHTML = element.innerHTML.replace('Copied!', '');\n",
+       "\n",
+       "    navigator.clipboard.writeText(fullParamName)\n",
+       "        .then(() => {\n",
+       "            element.style.width = originalWidth;\n",
+       "            element.style.color = 'green';\n",
+       "            element.innerHTML = \"Copied!\";\n",
+       "\n",
+       "            setTimeout(() => {\n",
+       "                element.innerHTML = originalHTML;\n",
+       "                element.style = originalStyle;\n",
+       "            }, 2000);\n",
+       "        })\n",
+       "        .catch(err => {\n",
+       "            console.error('Failed to copy:', err);\n",
+       "            element.style.color = 'red';\n",
+       "            element.innerHTML = \"Failed!\";\n",
+       "            setTimeout(() => {\n",
+       "                element.innerHTML = originalHTML;\n",
+       "                element.style = originalStyle;\n",
+       "            }, 2000);\n",
+       "        });\n",
+       "    return false;\n",
+       "}\n",
+       "\n",
+       "document.querySelectorAll('.fa-regular.fa-copy').forEach(function(element) {\n",
+       "    const toggleableContent = element.closest('.sk-toggleable__content');\n",
+       "    const paramPrefix = toggleableContent ? toggleableContent.dataset.paramPrefix : '';\n",
+       "    const paramName = element.parentElement.nextElementSibling.textContent.trim();\n",
+       "    const fullParamName = paramPrefix ? `${paramPrefix}${paramName}` : paramName;\n",
+       "\n",
+       "    element.setAttribute('title', fullParamName);\n",
+       "});\n",
+       "</script></body>"
+      ],
+      "text/plain": [
+       "Pipeline(steps=[('preprocessing',\n",
+       "                 ColumnTransformer(transformers=[('cat', OneHotEncoder(),\n",
+       "                                                  ['occupation', 'age_group',\n",
+       "                                                   'lifestyle_risk',\n",
+       "                                                   'city_tier']),\n",
+       "                                                 ('num', 'passthrough',\n",
+       "                                                  ['income_lpa', 'bmi'])])),\n",
+       "                ('classifier', RandomForestClassifier(random_state=42))])"
+      ]
+     },
+     "execution_count": 61,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_train,X_test,Y_train,Y_test=train_test_split(X,Y,test_size=0.2,random_state=42)\n",
+    "pipeline.fit(X_train,Y_train)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 63,
+   "id": "2bd8385e-0b9d-4579-a257-3d8e59ec67d4",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.6"
+      ]
+     },
+     "execution_count": 63,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "y_predict=pipeline.predict(X_test)\n",
+    "accuracy_score(Y_test,y_predict)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 65,
+   "id": "b642e3ef-2741-4064-82ff-53072a810331",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>income_lpa</th>\n",
+       "      <th>occupation</th>\n",
+       "      <th>bmi</th>\n",
+       "      <th>age_group</th>\n",
+       "      <th>lifestyle_risk</th>\n",
+       "      <th>city_tier</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>44</th>\n",
+       "      <td>50.00</td>\n",
+       "      <td>private_job</td>\n",
+       "      <td>30.078125</td>\n",
+       "      <td>middle_age</td>\n",
+       "      <td>high</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>18</th>\n",
+       "      <td>38.14</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>24.969136</td>\n",
+       "      <td>middle_age</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>80</th>\n",
+       "      <td>50.00</td>\n",
+       "      <td>unemployed</td>\n",
+       "      <td>34.350461</td>\n",
+       "      <td>middle_age</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>33</th>\n",
+       "      <td>1.46</td>\n",
+       "      <td>retired</td>\n",
+       "      <td>21.791064</td>\n",
+       "      <td>senior</td>\n",
+       "      <td>low</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>30</th>\n",
+       "      <td>32.97</td>\n",
+       "      <td>business_owner</td>\n",
+       "      <td>29.937519</td>\n",
+       "      <td>adult</td>\n",
+       "      <td>medium</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    income_lpa      occupation        bmi   age_group lifestyle_risk  \\\n",
+       "44       50.00     private_job  30.078125  middle_age           high   \n",
+       "18       38.14  business_owner  24.969136  middle_age         medium   \n",
+       "80       50.00      unemployed  34.350461  middle_age         medium   \n",
+       "33        1.46         retired  21.791064      senior            low   \n",
+       "30       32.97  business_owner  29.937519       adult         medium   \n",
+       "\n",
+       "    city_tier  \n",
+       "44          2  \n",
+       "18          3  \n",
+       "80          2  \n",
+       "33          1  \n",
+       "30          1  "
+      ]
+     },
+     "execution_count": 65,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_test.sample(5)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 68,
+   "id": "16da3ad9-1a79-40bb-990e-fce56109f139",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#saving weights into Pickle \n",
+    "import pickle\n",
+    "pickle_model_path=\"../model.pkl\"\n",
+    "with open(pickle_model_path,\"wb\") as f:\n",
+    "    pickle.dump(pipeline,f)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.13.9"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
+</file>
+
+<file path="model/predict.py">
+import pickle
+import pandas as pd
+
+with open("model/model.pkl","rb") as f:
+    model=pickle.load(f)
+
+ModelVersion="1.0.0"
+
+class_labels=model.classes_.tolist()
+def prediction_output(user_input:dict):
+    df=pd.DataFrame([user_input])
+    predicted_classes=model.predict(df)[0]
+    probabilities=model.predict_proba(df)[0]
+    confidence=max(probabilities)
+    class_prob=dict(zip(class_labels,map(lambda p: round(p,4),probabilities)))
+    return {
+        "predicted_category":predicted_classes,
+        "confidence":confidence,
+        "class_probabalities":class_prob
+    }
+</file>
+
+<file path="schema/prediction_reponse.py">
+from pydantic import BaseModel,Field
+from typing import Dict
+
+class PredictionResponse(BaseModel):
+    predicted_category:str=Field(...,description="The prediction from the model",examples=["High"])
+    confidence:float=Field(...,description="Model's confidence score for the predicted class(from 0 to 1)",examples=[0.8123])
+    class_probabalities:Dict[str,float]=Field(...,description="Probabilities of the all possible classes",examples=[{"Low":0.01,"Medium":0.15,"High":0.84}])
+</file>
+
+<file path="schema/user_input_validation.py">
+from pydantic import BaseModel,field_validator,Field,computed_field
+from typing import Literal,Annotated
+from config.city_tier import tier_1_cities,tier_2_cities
+
+class UserInput(BaseModel):
+    age:Annotated[int,Field(...,description="Age of the user",gt=0,lt=120)]
+    weight:Annotated[float,Field(...,gt=0,description="Weight of the user")]
+    height:Annotated[float,Field(...,gt=0,description="Height of the user")]
+    income_lpa:Annotated[float,Field(...,description="Income of the user")]
+    smoker:Annotated[bool,Field(...,description="Is user a smoker")]
+    city:Annotated[str,Field(...,description="The city of user")]
+    occupation:Annotated[Literal['retired', 'freelancer', 'student', 'government_job',
+       'business_owner', 'unemployed', 'private_job'],Field(...,description="Occupation of the user")]
+    @field_validator("city")
+    @classmethod
+    def normalize_class(cls,v:str)->str:
+        v=v.strip().title()
+        return v
+    
+    @computed_field
+    @property
+    def bmi(self)->float:
+        return self.weight/(self.height)**2
+
+    @computed_field
+    @property
+    def age_group(self)->str:
+        if self.age<25:
+            return "young"
+        elif self.age<45:
+            return "adult"
+        elif self.age<60:
+            return "middle_age"
+        else:
+            return "senior"
+
+    @computed_field
+    @property
+    def city_tier(self)->int:
+        if self.city in tier_1_cities:
+            return 1
+        elif self.city in tier_2_cities:
+            return 2
+        else:
+            return 3
+
+    @computed_field
+    @property
+    def lifestyle_risk(self)->str:
+        if self.smoker and self.bmi>30:
+            return "high"
+        elif self.smoker or self.bmi>27:
+            return "medium"
+        else:
+            return "low"
+</file>
+
+<file path="src/ml_through_fastapi/__init__.py">
+def main() -> None:
+    print("Hello from ml-through-fastapi!")
+</file>
+
+<file path=".gitignore">
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+</file>
+
+<file path=".python-version">
+3.11
+</file>
+
+<file path="app.py">
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from schema.user_input_validation import UserInput
+from schema.prediction_reponse import PredictionResponse
+from model.predict import ModelVersion, prediction_output,model
+
+app=FastAPI()
+
+@app.get("/")
+def home():
+    return {"message":"This is the home page of this API"}
+
+@app.get("/health")
+def health_check():
+    return {
+        "status":"OK",
+        "version":ModelVersion,
+        "model_loaded":model is not None
+    }
+
+@app.post("/predict",response_model=PredictionResponse)
+def predict_premium(data:UserInput):
+    user_input={
+        "bmi":data.bmi,
+        "age_group":data.age_group,
+        "lifestyle_risk":data.lifestyle_risk,
+        "city_tier":data.city_tier,
+        "income_lpa":data.income_lpa,
+        "occupation":data.occupation
+    }
+
+    try:
+        prediction=prediction_output(user_input)
+        return JSONResponse(status_code=200,content={"response":prediction})
+    except Exception as e:
+        return JSONResponse(status_code=500,content=str(e))
+</file>
+
+<file path="pyproject.toml">
+[project]
+name = "ml-through-fastapi"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "vivek", email = "vivekrajraghav@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.141.1",
+    "pandas>=3.0.6",
+    "pydantic[email]>=2.13.5",
+    "scikit-learn==1.7.2",
+    "streamlit>=1.64.0",
+    "uvicorn>=0.53.0",
+]
+
+[project.scripts]
+ml-through-fastapi = "ml_through_fastapi:main"
+
+[build-system]
+requires = ["uv_build>=0.12.6,<0.13.0"]
+build-backend = "uv_build"
+</file>
+
+<file path="README.md">
+# FastAPI Machine Learning API: Insurance Premium Predictor
+
+![Python](https://img.shields.io/badge/Python-3.11-007acc?logo=python&logoColor=white) ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Pipeline-e67e22?logo=scikit-learn&logoColor=white) ![Machine Learning](https://img.shields.io/badge/Machine%20Learning-27ae6) ![Pydantic](https://img.shields.io/badge/Pydantic-Validation-000000?logo=pydantic&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-API-1abc9c?logo=fastapi&logoColor=white)
+
+
+This project serves as a practical implementation to track my learning journey of integrating Machine Learning models into production-ready web APIs. It exposes a Scikit-Learn Random Forest model via **FastAPI**, featuring robust input validation and automated feature engineering using **Pydantic**.
+
+The API predicts a user's **Insurance Premium Category** (`Low`, `Medium`, or `High`) based on their demographic details, lifestyle habits, and occupation.
+
+## ✨ Features
+
+* **End-to-End ML Integration**: Seamlessly serves a pre-trained `scikit-learn` Random Forest model through a RESTful API.
+* **Automated Feature Engineering**: Utilizes Pydantic `@computed_field` decorators to automatically derive complex features (BMI, Age Group, Lifestyle Risk, and City Tier) from raw user input on the fly.
+* **Strict Input Validation**: Leverages Pydantic to ensure all incoming data is type-checked, range-bound, and sanitized before reaching the model.
+* **Confidence Scoring**: Returns not just the predicted category, but also the model's confidence score and the probability distribution across all possible classes.
+* **Health Monitoring**: Includes a dedicated health check endpoint to monitor API status and model availability.
+
+## 🛠️ Tech Stack
+
+* **Web Framework:** [FastAPI](https://fastapi.tiangolo.com/) - For building high-performance APIs.
+* **Data Validation:** [Pydantic](https://docs.pydantic.dev/) - For request/response schemas and derived calculations.
+* **Machine Learning:** [Scikit-Learn](https://scikit-learn.org/) - For the Random Forest Classifier pipeline (Data preprocessing + inference).
+* **Data Manipulation:** [Pandas](https://pandas.pydata.org/) - For DataFrame handling during model inference.
+* **Server:** [Uvicorn](https://www.uvicorn.org/) - ASGI web server.
+
+## 📂 Project Structure
+
+```text
+.
+├── app.py                           # Main FastAPI application and route definitions
+├── config/
+│   └── city_tier.py                 # Configuration lists for Tier 1 and Tier 2 cities
+├── model/
+│   ├── ml_train/
+│   │   ├── insurance.csv            # Original training dataset
+│   │   └── train_ml.ipynb           # Jupyter notebook containing EDA and model training
+│   ├── model.pkl                    # Pickled Scikit-Learn pipeline (Preprocessing + Model)
+│   └── predict.py                   # Inference logic and model loading
+├── schema/
+│   ├── prediction_reponse.py        # Pydantic schema for the API response
+│   └── user_input_validation.py     # Pydantic schema for input validation and feature creation
+├── pyproject.toml                   # Project dependencies and metadata
+└── README.md                        # Project documentation
+```
+
+## ⚙️ Setup and Installation
+
+### Prerequisites
+* Python 3.11 or higher
+* [uv](https://github.com/astral-sh/uv) (recommended) or standard `pip` for dependency management.
+
+### Installation Steps
+
+1. **Clone the repository (if applicable):**
+   ```bash
+   git clone <your-repo-url>
+   cd ml-through-fastapi
+   ```
+
+2. **Create and activate a virtual environment:**
+   ```bash
+   python -m venv .venv
+   # On Windows:
+   .venv\Scripts\activate
+   # On macOS/Linux:
+   source .venv/bin/activate
+   ```
+
+3. **Install the dependencies:**
+   Since the project uses `pyproject.toml`, you can install it directly:
+   ```bash
+   pip install -e .
+   ```
+   *(Note: The dependencies include `fastapi`, `pandas`, `pydantic`, `scikit-learn`, and `uvicorn`)*.
+
+## 🚀 How to Run It
+
+Start the FastAPI application using Uvicorn with live-reload enabled:
+
+```bash
+uvicorn app:app --reload
+```
+
+The API will start running locally at: `http://127.0.0.1:8000`
+
+You can immediately explore and test the API using FastAPI's built-in interactive documentation:
+* **Swagger UI:** `http://127.0.0.1:8000/docs`
+* **ReDoc:** `http://127.0.0.1:8000/redoc`
+
+## 📡 API Endpoints
+
+### 1. Root / Home
+* **Endpoint:** `GET /`
+* **Description:** Simple welcome message to verify the server is running.
+* **Response:**
+  ```json
+  {
+    "message": "This is the home page of this API"
+  }
+  ```
+
+### 2. Health Check
+* **Endpoint:** `GET /health`
+* **Description:** Checks the health of the API and verifies if the ML model (`model.pkl`) was loaded successfully into memory.
+* **Response:**
+  ```json
+  {
+    "status": "OK",
+    "version": "1.0.0",
+    "model_loaded": true
+  }
+  ```
+
+### 3. Predict Premium Category
+* **Endpoint:** `POST /predict`
+* **Description:** Accepts user data, performs validation and dynamic feature engineering, and returns the predicted insurance premium category.
+
+**Request Body (JSON):**
+```json
+{
+  "age": 28,
+  "weight": 75.5,
+  "height": 1.75,
+  "income_lpa": 12.5,
+  "smoker": false,
+  "city": "Mumbai",
+  "occupation": "private_job"
+}
+```
+
+**Response (JSON):**
+*(Note: The JSON response structure reflects the Pydantic schema definitions)*
+```json
+{
+  "response": {
+    "predicted_category": "Low",
+    "confidence": 0.85,
+    "class_probabalities": {
+      "Low": 0.85,
+      "Medium": 0.12,
+      "High": 0.03
+    }
+  }
+}
+```
+
+## 🧠 Behind the Scenes: Model & Data
+
+* **Training Data:** The model was trained on a synthetic dataset (`insurance.csv`) containing records of age, weight, height, income, smoking habits, city, and occupation.
+* **Feature Engineering Pipeline:** 
+  Raw inputs are transformed by Pydantic properties:
+  * `bmi` is calculated from `weight` and `height`.
+  * `age_group` is categorized into young, adult, middle_age, or senior.
+  * `lifestyle_risk` is determined by a combination of smoking status and BMI.
+  * `city_tier` evaluates if the city falls into Tier 1, Tier 2, or Tier 3 lists.
+* **The Model:** A `RandomForestClassifier` packaged within a `Pipeline` that includes a `ColumnTransformer` (handling One-Hot Encoding for categorical variables).
+
+---
+*Built with ❤️ to learn Machine Learning & API Integration.*
+</file>
+
+</files>
